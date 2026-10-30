@@ -77,13 +77,15 @@ def build_snapshot(
     project_dir = project_dir.expanduser().resolve()
     resolved_context = (context_dir or resolve_context_dir(project_dir)).expanduser().resolve()
 
-    if not resolved_context.is_dir():
-        raise NotADirectoryError(resolved_context)
-
+    # Refused on name, before existence: a runner with no ~/Desktop must still
+    # get PermissionError rather than a misleading NotADirectoryError.
     if resolved_context in _personal_roots():
         raise PermissionError(
             f"refusing to index personal directory: {resolved_context}"
         )
+
+    if not resolved_context.is_dir():
+        raise NotADirectoryError(resolved_context)
 
     if not allow_external and not _is_within(resolved_context, project_dir):
         raise PermissionError(
